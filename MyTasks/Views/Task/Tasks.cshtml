@@ -6,7 +6,7 @@
 
 <h1 class="mb-3">Moje Zadania</h1>
 
-<form class="form-row align-items-center" id="filterForm">
+<form class="row align-items-center" id="filterForm">
     <div class="col-auto">
         @Html.TextBoxFor(x => x.FilterTasks.Title,
         new {@class = "form-control mb-2", placeholder = "Tytuł"})
@@ -36,21 +36,21 @@
 </div>
 
 @section Scripts
-    {
+{
     <script type="text/javascript">
 
-        $(document).ready(function() {
+        $(document).ready(function () {
 
-            $('#filterForm').submit(function() {
+            $('#filterForm').submit(function () {
 
                 $.ajax({
                     type: "POST",
-                    url: @Url.Action("Tasks", "Task"),
+                    url: "@Url.Action("Tasks", "Task")",
                     data: $(this).serialize(),
-                    success: function(data) {
-                        $('taskTable').html(data);
+                    success: function (data) {
+                        $('#tasksTable').html(data);
                     },
-                    error: function(data) {
+                    error: function (data) {
                         alert(data.message)
                     },
                     dataType: "html"
@@ -58,60 +58,62 @@
 
                 return false;
             });
+
         });
 
         function deleteTask(id, btn) {
 
-            if (!confirm("Czy na pewno chcesz usunąć zadane?"))
+            if (!confirm("Czy na pewno chcesz usunąć zadanie?"))
                 return;
 
             $.ajax({
                 type: "POST",
-                url: @Url.Action("Delete", "Task"),
+                url: "@Url.Action("Delete", "Task")",
                 data: {
                     id: id
                 },
-                success: function(data) {
+                success: function (data) {
                     if (data.success) {
                         var row = btn.parentNode.parentNode;
-                        row.parentNode.removeChilde(row);
-                    }
-                    else {
+                        row.parentNode.removeChild(row);
+                    } else {
                         alert(data.message);
                     }
                 },
-                error: function(data) {
+                error: function (data) {
+                    alert(data.message)
+                },
+                dataType: "json"
+            });
+
+        }
+
+        function finishTask(id, btn) {
+
+            if (!confirm("Czy na pewno chcesz oznaczyć zadanie jako zrealizowane?"))
+                return;
+
+            $.ajax({
+                type: "POST",
+                url: "@Url.Action("Finish", "Task")",
+                data: {
+                    id: id
+                },
+                success: function (data) {
+                    if (data.success) {
+                        var row = btn.parentNode.parentNode;
+                        row.parentNode.removeChild(row);
+                    } else {
+                        alert(data.message);
+                    }
+                },
+                error: function (data) {
                     alert(data.message)
                 },
                 dataType: "json"
             });
         }
 
-                function finishTask(id, btn) {
-
-            if (!confirm("Czy na pewno chcesz oznaczyć zadane jako zrealizowane?"))
-                return;
-
-            $.ajax({
-                type: "POST",
-                url: @Url.Action("Finish", "Task"),
-                data: {
-                    id: id
-                },
-                success: function(data) {
-                    if (data.success) {
-                        var row = btn.parentNode.parentNode;
-                        row.parentNode.removeChilde(row);
-                    }
-                    else {
-                        alert(data.message);
-                    }
-                },
-                error: function(data) {
-                    alert(data.message)
-                },
-                dataType: "json"
-            });
-        }
     </script>
-   }
+
+}

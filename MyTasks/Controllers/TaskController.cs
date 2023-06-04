@@ -2,8 +2,10 @@
 using Microsoft.AspNetCore.Mvc;
 using MyTasks.Core.Models;
 using MyTasks.Core.ViewModels;
+using MyTasks.Persistence;
 using MyTasks.Persistence.Extensions;
 using MyTasks.Persistence.Repositorys;
+using MyTasks.Persistence.Services;
 using System.Security.Claims;
 
 namespace MyTasks.Controllers
@@ -11,8 +13,12 @@ namespace MyTasks.Controllers
     [Authorize]
     public class TaskController : Controller
     {
-        private TaskRepository _taskRepository = new TaskRepository();
+        private TaskService _taskService;
 
+        public TaskController(ApplicationDbContext context)
+        {
+            _taskService = new TaskService(new UnitOfWork(context));
+        }
 
         public IActionResult Tasks()
         {
@@ -21,8 +27,8 @@ namespace MyTasks.Controllers
             var vm = new TasksViewModel
             {
                 FilterTasks = new FilterTasks(),
-                Tasks = _taskRepository.Get(userId),
-                Categories = _taskRepository.GetCategories()
+                Tasks = _taskService.Get(userId),
+                Categories = _taskService.GetCategories()
             };
 
             return View(vm);
@@ -33,7 +39,7 @@ namespace MyTasks.Controllers
         {
             var userId = User.GetUserId();
 
-            var tasks = _taskRepository.Get(userId,
+            var tasks = _taskService.Get(userId,
                 viewModel.FilterTasks.IsExecuted,
                 viewModel.FilterTasks.CategoryId,
                 viewModel.FilterTasks.Title);
@@ -47,7 +53,7 @@ namespace MyTasks.Controllers
 
             var task = id == 0 ?
                 new Core.Models.Domains.Task { Id = 0, UserId = userId, Term = DateTime.Today } :
-                _taskRepository.Get(id, userId);
+                _taskService.Get(id, userId);
 
             var vm = PreparetaskViewModel(task);
 
@@ -69,9 +75,10 @@ namespace MyTasks.Controllers
             }
 
             if (task.Id == 0)
-                _taskRepository.Add(task);
+                _taskService.Add(task);
             else
-                _taskRepository.Update(task);
+                _taskService.Update(task);
+
 
             return RedirectToAction("Tasks");
         }
@@ -83,22 +90,22 @@ namespace MyTasks.Controllers
                 Task = task,
                 Heading = task.Id == 0 ?
                 "Dodawanie nowego zadania" : "Edytowanie zadania",
-                Categories = _taskRepository.GetCategories()
+                Categories = _taskService.GetCategories()
             };
         }
 
         [HttpPost]
         public IActionResult Delete(int id)
         {
-            var userId = User.GetUserId();
-
             try
             {
-                _taskRepository.Finish(id, userId);
+                var userId = User.GetUserId();
+                _taskService.Delete(id, userId);
+
             }
             catch (Exception e)
             {
-               return Json(new {Success = false, message = e.Message});
+                return Json(new { Success = false, message = e.Message });
             }
 
             return Json(new { Success = true });
@@ -107,11 +114,10 @@ namespace MyTasks.Controllers
         [HttpPost]
         public IActionResult Finish(int id)
         {
-            var userId = User.GetUserId();
-
             try
             {
-                _taskRepository.Finish(id, userId);
+                var userId = User.GetUserId();
+                _taskService.Finish(id, userId);
             }
             catch (Exception e)
             {

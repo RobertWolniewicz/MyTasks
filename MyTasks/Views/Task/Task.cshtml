@@ -8,11 +8,12 @@
 
 @using (Html.BeginForm("Task", "Task"))
 {
+    @Html.ValidationSummary()
     <p class="alert alert-info mt-4 mb-4">
         Pola Tytuł, Opis i kategoria sa <strong>wymagane</strong>
     </p>
 
-    @Html.AntiForgeryToken
+    @Html.AntiForgeryToken()
     @Html.HiddenFor(x => x.Task.Id)
 
     <div class="mb-1">
@@ -51,10 +52,11 @@
         </div>
     }
     <button type="submit" class="btn btn-primary btn-lg mt-2">Zapisz</button>
+}
 
-    @section scripts{
+@section scripts {
     <script type="text/javascript">
-        $(document).ready(function() {
+        $(document).ready(function () {
             $('#Term').datepicker({
                 format: "dd-mm-yyyy",
                 language: "pl",
@@ -65,5 +67,4 @@
             });
         })
     </script>
-    }
 }
